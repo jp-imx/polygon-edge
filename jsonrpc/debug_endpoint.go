@@ -80,6 +80,12 @@ func (d *Debug) TraceBlockByNumber(
 	blockNumber BlockNumber,
 	config *TraceConfig,
 ) (interface{}, error) {
+	//nolint
+	// TODO: Remove once Polygon addresses the out of memory errors caused by tracer.go
+	if true {
+		return nil, fmt.Errorf("this endpoint has been disabled. Please reach out at: https://support.immutable.com/en/")
+	}
+
 	num, err := GetNumericBlockNumber(blockNumber, d.store)
 	if err != nil {
 		return nil, err
@@ -97,6 +103,12 @@ func (d *Debug) TraceBlockByHash(
 	blockHash types.Hash,
 	config *TraceConfig,
 ) (interface{}, error) {
+	//nolint
+	// TODO: Remove once Polygon addresses the out of memory errors caused by tracer.go
+	if true {
+		return nil, fmt.Errorf("this endpoint has been disabled. Please reach out at: https://support.immutable.com/en/")
+	}
+
 	block, ok := d.store.GetBlockByHash(blockHash, true)
 	if !ok {
 		return nil, fmt.Errorf("block %s not found", blockHash)
@@ -109,6 +121,12 @@ func (d *Debug) TraceBlock(
 	input string,
 	config *TraceConfig,
 ) (interface{}, error) {
+	//nolint
+	// TODO: Remove once Polygon addresses the out of memory errors caused by tracer.go
+	if true {
+		return nil, fmt.Errorf("this endpoint has been disabled. Please reach out at: https://support.immutable.com/en/")
+	}
+
 	blockByte, decodeErr := hex.DecodeHex(input)
 	if decodeErr != nil {
 		return nil, fmt.Errorf("unable to decode block, %w", decodeErr)
@@ -126,6 +144,12 @@ func (d *Debug) TraceTransaction(
 	txHash types.Hash,
 	config *TraceConfig,
 ) (interface{}, error) {
+	//nolint
+	// TODO: Remove once Polygon addresses the out of memory errors caused by tracer.go
+	if true {
+		return nil, fmt.Errorf("this endpoint has been disabled. Please reach out at: https://support.immutable.com/en/")
+	}
+
 	tx, block := GetTxAndBlockByTxHash(txHash, d.store)
 	if tx == nil {
 		return nil, fmt.Errorf("tx %s not found", txHash.String())
@@ -150,6 +174,12 @@ func (d *Debug) TraceCall(
 	filter BlockNumberOrHash,
 	config *TraceConfig,
 ) (interface{}, error) {
+	//nolint
+	// TODO: Remove once Polygon addresses the out of memory errors caused by tracer.go
+	if true {
+		return nil, fmt.Errorf("this endpoint has been disabled. Please reach out at: https://support.immutable.com/en/")
+	}
+
 	header, err := GetHeaderFromBlockNumberOrHash(filter, d.store)
 	if err != nil {
 		return nil, ErrHeaderNotFound
