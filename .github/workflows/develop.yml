@@ -46,18 +46,10 @@ jobs:
           echo REPOSITORY_NAME="$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
           echo TAG_NAME="$(echo ${{ github.ref }} | cut -d / -f3-)" >> $GITHUB_ENV
           echo SHORT_SHA="$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          echo LATEST_VERSION="$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
-          echo BRANCH="$(git rev-parse --abbrev-ref HEAD | tr -d '\040\011\012\015\n')" >> $GITHUB_ENV
-          echo TIME="$(date)" >> $GITHUB_ENV
       - name: Build
         run: |
           export GOOS=linux GOARCH=amd64 CC=gcc CXX=g++
-          go build -ldflags='-s -w -linkmode external -extldflags "-static"' -o polygon-edge -ldflags="\
-            -X 'github.com/0xPolygon/polygon-edge/versioning.Version=$(LATEST_VERSION)' \
-            -X 'github.com/0xPolygon/polygon-edge/versioning.Commit=$(SHORT_SHA)'\
-            -X 'github.com/0xPolygon/polygon-edge/versioning.Branch=$(BRANCH)'\
-            -X 'github.com/0xPolygon/polygon-edge/versioning.BuildTime=$(TIME)'" \
-            main.go
+          go build -ldflags='-s -w -linkmode external -extldflags "-static"' -o polygon-edge main.go
       - name: Build and tag container image for Dev
         uses: docker/build-push-action@v3
         with:
