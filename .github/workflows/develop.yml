@@ -5,7 +5,7 @@ on:
     branches: [develop]
 
 jobs:
-  build_image_dev:
+  build_binary:
     name: Build docker image and tag to dev
     environment:
       name: dev
@@ -15,48 +15,32 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Docker registry login
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19
-      - name: Set up Docker Context for buildx
-        id: buildx-context
-        run: |
-          docker context create builders
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          version: latest
-          endpoint: builders
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ghcr.io/${{ github.repository }}/${{ matrix.project }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          go-version: 1.20
       - name: Set env vars
         run: |
           echo BUILD_TIMESTAMP="$(date +%s)" >> $GITHUB_ENV
           echo REPOSITORY_NAME="$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
           echo TAG_NAME="$(echo ${{ github.ref }} | cut -d / -f3-)" >> $GITHUB_ENV
           echo SHORT_SHA="$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo LATEST_VERSION="$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+          echo BRANCH="$(git rev-parse --abbrev-ref HEAD | tr -d '\040\011\012\015\n')" >> $GITHUB_ENV
+          echo TIME="$(date)" >> $GITHUB_ENV
       - name: Build
-        run: |
-          export GOOS=linux GOARCH=amd64 CC=gcc CXX=g++
-          go build -ldflags='-s -w -linkmode external -extldflags "-static"' -o polygon-edge main.go
-      - name: Build and tag container image for Dev
-        uses: docker/build-push-action@v3
+        env:
+          CC: gcc
+          CXX: g++
+          GOARC: amd64
+          GOOS: linux
+        run: go build -ldflags='-s -w -linkmode external -extldflags "-static"' -o polygon-edge -ldflags="\
+            -X 'github.com/0xPolygon/polygon-edge/versioning.Version=${{ env.LATEST_VERSION }}' \
+            -X 'github.com/0xPolygon/polygon-edge/versioning.Commit=${{ env.SHORT_SHA }}'\
+            -X 'github.com/0xPolygon/polygon-edge/versioning.Branch=${{ env.BRANCH }}'\
+            -X 'github.com/0xPolygon/polygon-edge/versioning.BuildTime=${{ env.TIME }}'" \
+            main.go
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v3
         with:
-          context: ./
-          file: Dockerfile.release
-          push: true
-          tags: ghcr.io/${{ github.repository }}/${{ env.REPOSITORY_NAME }}:develop-${{ env.BUILD_TIMESTAMP }}-git.${{ env.SHORT_SHA }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=min
+          name: polygon-edge
+          path: ./polygon-edge
